@@ -5,18 +5,20 @@
 #include "Image.hpp"
 #include "bilinear.hpp"
 #include <OpenImageIO/imageio.h>
+#include <argagg/argagg.hpp>
 #include <boost/program_options.hpp>
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>
+#include <sstream>
 #include <utility>
 
 namespace po = boost::program_options;
 
 class Application final {
 	private:
-	po::variables_map       m_varMap;
-	po::options_description m_optionsDesc;
+	argagg::parser_results m_args;
+	argagg::parser         m_argParser;
 
 	public:
 	Application(int argc, char* argv[]);

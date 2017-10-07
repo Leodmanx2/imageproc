@@ -57,8 +57,8 @@ else
 	EXE_NAME = $(PROJECT_NAME)
 	TEST_EXE_NAME = TestSuite
 endif
-LDLIBS += -lopenimageio -lboost_program_options-mt
-TEST_LDLIBS += -lopenimageio -lboost_program_options-mt
+LDLIBS += -lopenimageio
+TEST_LDLIBS += -lopenimageio
 
 
 ################################################################################

@@ -8,54 +8,65 @@ int main(int argc, char* argv[]) {
 }
 
 Application::Application(int argc, char** argv)
-  : m_varMap(), m_optionsDesc("Options") {
-	m_optionsDesc.add_options()("help,h", "produce help message")(
-	  "input,i", po::value<std::string>(), "input file")(
-	  "output,o", po::value<std::string>(), "output file")(
-	  "method,m",
-	  po::value<std::string>(),
-	  "interpolation method (bilinear, IMDDT)")(
-	  "scale,s", po::value<float>(), "scale factor");
-
-	po::positional_options_description inputOption;
-	inputOption.add("input", -1);
-
-	po::command_line_parser parser(argc, argv);
-	parser.options(m_optionsDesc);
-	parser.positional(inputOption);
-
-	po::store(parser.run(), m_varMap);
-	po::notify(m_varMap);
+  : m_argParser{{{"help", {"-h", "--help"}, "produce help message", 0},
+                 {"input", {"-i", "--input"}, "input file", 1},
+                 {"output", {"-o", "--output"}, "output file", 1},
+                 {"method",
+                  {"-m", "--method"},
+                  "interpolation method (bilinear, IMDDT)",
+                  1},
+                 {"scale", {"-s", "--scale"}, "scale factor", 1}}} {
+	m_args = m_argParser.parse(argc, argv);
 }
 
 void Application::run() {
-	if(m_varMap.empty() || m_varMap.count("help")) {
-		std::cout << m_optionsDesc << "\n";
-	} else if(!m_varMap.count("input")) {
-		std::cerr << "input file needed\n";
-	} else if(!m_varMap.count("method")) {
-		std::cerr << "interpolation method needed\n";
-	} else {
-		const std::string inFile = m_varMap["input"].as<std::string>();
-		const Image       src(inFile);
-		const std::string outFile = m_varMap.count("output") ?
-		                              m_varMap["output"].as<std::string>() :
-		                              "_" + inFile;
-		const float scale =
-		  m_varMap.count("scale") ? m_varMap["scale"].as<float>() : 2.0f;
+	if(m_args["help"]) {
+		argagg::fmt_ostream fmt(std::cout);
+		fmt << m_argParser;
+		return;
+	}
 
-		if(m_varMap["method"].as<std::string>().compare("IMDDT") == 0) {
-			const Image dst =
-			  IMDDT(src,
-			        {static_cast<unsigned int>(src.dimensions().width * scale),
-			         static_cast<unsigned int>(src.dimensions().height * scale)});
-			dst.save(outFile);
-		} else if(m_varMap["method"].as<std::string>().compare("bilinear") == 0) {
-			const Image dst =
-			  bilinear(src,
-			           {static_cast<unsigned int>(src.dimensions().width * scale),
-			            static_cast<unsigned int>(src.dimensions().height * scale)});
-			dst.save(outFile);
-		}
+	// Determine input file
+	std::string inFile;
+	if(m_args["input"]) {
+		inFile = m_args["input"].as<std::string>();
+	} else if(m_args.pos.size() >= 1) {
+		inFile = m_args.as<std::string>(0);
+	} else {
+		std::cerr << "input file needed\nUse -h for help.\n";
+		return;
+	}
+
+	// Determine interpolation method
+	if(!m_args["method"]) {
+		std::cerr << "interpolation method needed\nUse -h for help.\n";
+		return;
+	}
+	const std::string method = m_args["method"].as<std::string>();
+
+	// Determine scale
+	const float scale = m_args["scale"].as<float>(2.0f);
+
+	// Determine output file
+	std::stringstream ss;
+	ss << m_args["method"].as<std::string>() << "-" << scale << "x_" << inFile;
+	const std::string outFile = m_args["output"].as<std::string>(ss.str());
+
+	// Process image
+	const Image src(inFile);
+	if(method.compare("IMDDT") == 0) {
+		const Image dst =
+		  IMDDT(src,
+		        {static_cast<unsigned int>(src.dimensions().width * scale),
+		         static_cast<unsigned int>(src.dimensions().height * scale)});
+		dst.save(outFile);
+	} else if(method.compare("bilinear") == 0) {
+		const Image dst =
+		  bilinear(src,
+		           {static_cast<unsigned int>(src.dimensions().width * scale),
+		            static_cast<unsigned int>(src.dimensions().height * scale)});
+		dst.save(outFile);
+	} else {
+		std::cerr << "method unrecognized\n";
 	}
 }
