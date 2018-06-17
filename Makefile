@@ -44,16 +44,14 @@ ifeq ($(CXX), clang++)
 	CXXFLAGS_WARNINGS += -Wdeprecated -Wdocumentation -Werror=documentation
 endif
 
-CXXFLAGS += -std=c++14 $(CXXFLAGS_CLANG) $(CXXFLAGS_WARNINGS) -c
+CXXFLAGS += -std=c++17 $(CXXFLAGS_CLANG) $(CXXFLAGS_WARNINGS) -c
 
 # Certain library names and flags depend on the OS
 ifeq ($(OS), Windows_NT)
-	LDLIBS = -lmingw32 -lopengl32 -lglu32 -llibphysfs
 	#LDFLAGS += -mwindows
 	EXE_NAME = $(PROJECT_NAME).exe
 	TEST_EXE_NAME = TestSuite.exe
 else
-	LDLIBS = -lGL -lGLU -lphysfs
 	EXE_NAME = $(PROJECT_NAME)
 	TEST_EXE_NAME = TestSuite
 endif
