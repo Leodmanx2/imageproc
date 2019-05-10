@@ -1,11 +1,14 @@
 #ifndef IMAGE_H
 #define IMAGE_H
 
+#include "gsl-lite.hpp"
 #include <OpenImageIO/imageio.h>
 #include <cstdint>
 #include <iterator>
 #include <string>
 #include <vector>
+
+using namespace gsl;
 
 struct Dimensions final {
 	unsigned int width;
@@ -26,10 +29,11 @@ class Image final {
 
 	inline uint8_t
 	at(unsigned int x, unsigned int y, unsigned int channel) const {
-		assert(x < m_dimensions.width);
-		assert(y < m_dimensions.height);
-		const size_t index = m_channels * (y * m_dimensions.width + x);
-		return m_data[index + channel];
+		Expects(x < m_dimensions.width);
+		Expects(y < m_dimensions.height);
+		Expects(channel < m_channels);
+		const index index = m_channels * (y * m_dimensions.width + x);
+		return m_data.at(index + channel);
 	}
 
 	inline const Dimensions& dimensions() const { return m_dimensions; }
@@ -38,10 +42,11 @@ class Image final {
 
 	inline void
 	set(unsigned int x, unsigned int y, uint8_t value, unsigned int channel) {
-		assert(x < m_dimensions.width);
-		assert(y < m_dimensions.height);
-		const int index = m_channels * (y * m_dimensions.width + x) + channel;
-		m_data[index]   = value;
+		Expects(x < m_dimensions.width);
+		Expects(y < m_dimensions.height);
+		Expects(channel < m_channels);
+		const index index = m_channels * (y * m_dimensions.width + x) + channel;
+		m_data[index]     = value;
 	}
 
 	void save(const std::string& filename) const;

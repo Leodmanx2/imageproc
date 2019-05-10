@@ -12,7 +12,10 @@
 #define IMDDT_H
 
 #include "Image.hpp"
+#include "gsl-lite.hpp"
 #include <cstdint>
+
+using namespace gsl;
 
 constexpr double IMDDT_single(double pixel_1,
                               double pixel_2,
@@ -56,25 +59,25 @@ Image IMDDT(const Image& src, const Dimensions& targetDim) {
 	const double scale_y =
 	  static_cast<double>(src.dimensions().height) / targetDim.height;
 
-	for(size_t pos_dst_x = 0; pos_dst_x < targetDim.width; ++pos_dst_x) {
-		const size_t pos_src_x  = scale_x * pos_dst_x;
-		const double distance_x = scale_x * pos_dst_x - pos_src_x;
-		for(size_t pos_dst_y = 0; pos_dst_y < targetDim.height; ++pos_dst_y) {
-			const size_t pos_src_y  = scale_y * pos_dst_y;
+	for(index pos_dst_x = 0; pos_dst_x < targetDim.width; ++pos_dst_x) {
+		const index pos_src_x  = scale_x * pos_dst_x;
+		const index distance_x = scale_x * pos_dst_x - pos_src_x;
+		for(index pos_dst_y = 0; pos_dst_y < targetDim.height; ++pos_dst_y) {
+			const index  pos_src_y  = scale_y * pos_dst_y;
 			const double distance_y = scale_y * pos_dst_y - pos_src_y;
 
-			for(size_t channel = 0; channel < src.channels(); ++channel) {
-				const size_t x_incremented = pos_src_x + 1 >= src.dimensions().width ?
-				                               src.dimensions().width - 1 :
-				                               pos_src_x + 1;
-				const size_t y_incremented = pos_src_y + 1 >= src.dimensions().height ?
-				                               src.dimensions().height - 1 :
-				                               pos_src_y + 1;
+			for(index channel = 0; channel < src.channels(); ++channel) {
+				const index x_incremented = pos_src_x + 1 >= src.dimensions().width ?
+				                              src.dimensions().width - 1 :
+				                              pos_src_x + 1;
+				const index y_incremented = pos_src_y + 1 >= src.dimensions().height ?
+				                              src.dimensions().height - 1 :
+				                              pos_src_y + 1;
 
-				uint8_t pixel_1 = src.at(pos_src_x, pos_src_y, channel);
-				uint8_t pixel_2 = src.at(x_incremented, pos_src_y, channel);
-				uint8_t pixel_3 = src.at(pos_src_x, y_incremented, channel);
-				uint8_t pixel_4 = src.at(x_incremented, y_incremented, channel);
+				const uint8_t pixel_1 = src.at(pos_src_x, pos_src_y, channel);
+				const uint8_t pixel_2 = src.at(x_incremented, pos_src_y, channel);
+				const uint8_t pixel_3 = src.at(pos_src_x, y_incremented, channel);
+				const uint8_t pixel_4 = src.at(x_incremented, y_incremented, channel);
 
 				const uint8_t interpolated = IMDDT_single(
 				  pixel_1, pixel_2, pixel_3, pixel_4, distance_x, distance_y);
