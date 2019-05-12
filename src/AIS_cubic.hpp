@@ -20,7 +20,7 @@ Image AIS_cubic(const Image& src) {
 	for(index x = 0; x < width; x += 2) {
 		for(index y = 0; y < height; y += 2) {
 			for(index channel = 0; channel < dst.channels(); ++channel) {
-				dst.set(x, y, src.at(x, y, channel), channel);
+				dst.set(x, y, src.at(x / 2, y / 2, channel), channel);
 			}
 		}
 	}
