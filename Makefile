@@ -30,7 +30,7 @@ OBJDIR = $(CURDIR)/obj
 ASSDIR = $(CURDIR)/ass
 BINDIR = $(CURDIR)/bin
 
-OBJ = $(addprefix $(OBJDIR)/, Application.o Image.o)
+OBJ = $(addprefix $(OBJDIR)/, Application.o Image.o bilinear.o IMDDT.o AIS_cubic.o)
 TEST_OBJ = $(addprefix $(OBJDIR)/, IMDDT_test.o TestRunner.o Image.o)
 
 CXXFLAGS_WARNINGS = -pedantic -Wall -Wextra -Wcast-align -Wcast-qual \
@@ -44,7 +44,7 @@ ifeq ($(CXX), clang++)
 	CXXFLAGS_WARNINGS += -Wdeprecated -Wdocumentation -Werror=documentation
 endif
 
-CXXFLAGS += -std=c++17 $(CXXFLAGS_CLANG) $(CXXFLAGS_WARNINGS) -c
+CXXFLAGS += -std=c++17 $(CXXFLAGS_CLANG) $(CXXFLAGS_WARNINGS) -c -D gsl_CONFIG_CONTRACT_VIOLATION_THROWS
 
 # Certain library names and flags depend on the OS
 ifeq ($(OS), Windows_NT)

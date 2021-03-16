@@ -1,9 +1,23 @@
 #include "Application.hpp"
 
+#include "AIS_cubic.hpp"
+#include "IMDDT.hpp"
+#include "Image.hpp"
+#include "bilinear.hpp"
+#include <OpenImageIO/imageio.h>
+#include <cstdint>
+#include <cstdlib>
+#include <iostream>
+#include <sstream>
+#include <utility>
+
 int main(int argc, char* argv[]) {
 	try {
+		std::clog << "initializing\n";
 		Application app(argc, argv);
+		std::clog << "running\n";
 		app.run();
+		std::clog << "finishing\n";
 	} catch(const std::exception& e) { std::cerr << e.what() << std::endl; }
 }
 
@@ -13,19 +27,21 @@ Application::Application(int argc, char** argv)
                  {"output", {"-o", "--output"}, "output file", 1},
                  {"method",
                   {"-m", "--method"},
-                  "interpolation method (bilinear, IMDDT)",
+                  "interpolation method (bilinear, IMDDT, AIS)",
                   1},
                  {"scale", {"-s", "--scale"}, "scale factor", 1}}} {
 	m_args = m_argParser.parse(argc, argv);
 }
 
 void Application::run() {
+	std::clog << "--1\n";
 	if(m_args["help"]) {
 		argagg::fmt_ostream fmt(std::cout);
 		fmt << m_argParser;
 		return;
 	}
 
+	std::clog << "--2\n";
 	// Determine input file
 	std::string inFile;
 	if(m_args["input"]) {
@@ -37,6 +53,7 @@ void Application::run() {
 		return;
 	}
 
+	std::clog << "--3\n";
 	// Determine interpolation method
 	if(!m_args["method"]) {
 		std::cerr << "interpolation method needed\nUse -h for help.\n";
@@ -44,14 +61,17 @@ void Application::run() {
 	}
 	const std::string method = m_args["method"].as<std::string>();
 
+	std::clog << "--4\n";
 	// Determine scale
 	const float scale = m_args["scale"].as<float>(2.0f);
 
+	std::clog << "--5\n";
 	// Determine output file
 	std::stringstream ss;
 	ss << m_args["method"].as<std::string>() << "-" << scale << "x_" << inFile;
 	const std::string outFile = m_args["output"].as<std::string>(ss.str());
 
+	std::clog << "--6\n";
 	// Process image
 	const Image src(inFile);
 	if(method.compare("IMDDT") == 0) {
@@ -65,6 +85,11 @@ void Application::run() {
 		  bilinear(src,
 		           {static_cast<unsigned int>(src.dimensions().width * scale),
 		            static_cast<unsigned int>(src.dimensions().height * scale)});
+		dst.save(outFile);
+	} else if(method.compare("AIS") == 0) {
+		std::clog << "--7\n";
+		const Image dst = AIS_cubic(src);
+		std::clog << "--8\n";
 		dst.save(outFile);
 	} else {
 		std::cerr << "method unrecognized\n";

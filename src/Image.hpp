@@ -20,8 +20,8 @@ struct Dimensions final {
 class Image final {
 	private:
 	Dimensions           m_dimensions;
-	std::vector<uint8_t> m_data;
 	unsigned int         m_channels;
+	std::vector<uint8_t> m_data;
 
 	public:
 	explicit Image(const Dimensions& dimensions, unsigned int channels);
