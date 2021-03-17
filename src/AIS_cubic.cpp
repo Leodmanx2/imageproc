@@ -10,53 +10,65 @@
 
 using namespace gsl;
 
-int G1(const Image& src, int i, int j, int channel) {
-	Expects(i >= 3);
-	Expects(i + 3 < static_cast<long long>(src.dimensions().height));
-	Expects(j >= 3);
-	Expects(j + 3 < static_cast<long long>(src.dimensions().width));
+int G1(const Image& dst, int x, int y, int channel) {
+	Expects(x >= 3);
+	Expects(x + 3 < static_cast<long long>(dst.dimensions().width));
+	Expects(y >= 3);
+	Expects(y + 3 < static_cast<long long>(dst.dimensions().height));
 
-	std::clog << "\tG1\n";
-	std::clog << '\t' << i << ',' << j << ',' << channel << '\n';
+	auto delta = [&](int dx, int dy) {
+		return abs(dst.at(x + dx, y + dy, channel) -
+		           dst.at(x + dx + 2, y + dy - 2, channel));
+	};
+
 	int accumulator = 0;
 
-	for(int p = -1; p <= 3; p += 2) {
-		for(int q = -1; q <= 3; q += 2) {
-			std::clog << "\t(" << p << ',' << q << '|' << accumulator << ")\n";
-			accumulator += abs(src.at(j - q, i + p, channel) -
-			                   src.at(j - q + 2, i + p - 2, channel));
-		}
-		// FIXME: AHAHAH, i+p-2 is less than 0, which violates the contract and
-		//        appears positive because at() takes an unsigned int
-		// FIXME: Also, this calculation includes two gradients that it should not
-	}
+	// Column 1
+	accumulator += delta(-3, -1);
+	accumulator += delta(-3, +1);
+
+	// Column 2
+	accumulator += delta(-1, -1);
+	accumulator += delta(-1, +1);
+	accumulator += delta(-1, +3);
+
+	// Column 3
+	accumulator += delta(+1, +1);
+	accumulator += delta(+1, +3);
 
 	return accumulator;
 }
 
-int G2(const Image& src, int i, int j, int channel) {
-	Expects(i >= 3);
-	Expects(i + 3 < static_cast<long long>(src.dimensions().height));
-	Expects(j >= 1);
-	Expects(j + 5 < static_cast<long long>(src.dimensions().width));
+int G2(const Image& dst, int x, int y, int channel) {
+	Expects(x >= 3);
+	Expects(x + 3 < static_cast<long long>(dst.dimensions().width));
+	Expects(y >= 3);
+	Expects(y + 3 < static_cast<long long>(dst.dimensions().height));
 
-	std::clog << "\tG2\n";
+	auto delta = [&](int dx, int dy) {
+		return abs(dst.at(x + dx, y + dy, channel) -
+		           dst.at(x + dx + 2, y + dy + 2, channel));
+	};
+
 	int accumulator = 0;
 
-	for(int p = -1; p <= 3; p += 2) {
-		for(int q = -1; q <= 3; q += 2) {
-			accumulator += abs(src.at(j + q, i + p, channel) -
-			                   src.at(j + q + 2, i + p - 2, channel));
-		}
-		// FIXME: Same problems as G1, but also the offsets are wrong because 5
-		//        is outside the window
-	}
+	// Column 1
+	accumulator += delta(-3, -1);
+	accumulator += delta(-3, +1);
+
+	// Column 2
+	accumulator += delta(-1, -3);
+	accumulator += delta(-1, -1);
+	accumulator += delta(-1, +1);
+
+	// Column 3
+	accumulator += delta(+1, -3);
+	accumulator += delta(+1, -1);
 
 	return accumulator;
 }
 
 int RU(const Image& src, int i, int j, int channel) {
-	std::clog << "\tRU\n";
 	int accumulator = 0;
 
 	for(int q = -1; q <= 3; q += 2) {
@@ -72,7 +84,6 @@ int RU(const Image& src, int i, int j, int channel) {
 }
 
 int RD(const Image& src, int i, int j, int channel) {
-	std::clog << "\tRD\n";
 	int accumulator = 0;
 
 	for(int q = -1; q <= 3; q += 2) {
@@ -88,7 +99,6 @@ int RD(const Image& src, int i, int j, int channel) {
 }
 
 int LU(const Image& src, int i, int j, int channel) {
-	std::clog << "\tLU\n";
 	int accumulator = 0;
 
 	for(int q = -1; q <= 3; q += 2) {
@@ -104,7 +114,6 @@ int LU(const Image& src, int i, int j, int channel) {
 }
 
 int LD(const Image& src, int i, int j, int channel) {
-	std::clog << "\tLD\n";
 	int accumulator = 0;
 
 	for(int q = -1; q <= 3; q += 2) {
@@ -125,8 +134,8 @@ uint8_t solve_interior(const Image& src, int x, int y, int channel) {
 	// Formulate the gradient calculation as a loop and break it out into its
 	// own function to limit the nesting. Loops are trivially parallelizable
 
-	int gradient_1 = G1(src, y, x, channel);
-	int gradient_2 = G2(src, y, x, channel);
+	int gradient_1 = G1(src, x, y, channel);
+	int gradient_2 = G2(src, x, y, channel);
 
 	const int threshold = 100;
 	if(gradient_1 - gradient_2 > threshold) {
@@ -179,13 +188,12 @@ Image AIS_cubic(const Image& src) {
 
 	std::clog << "filling interior\n";
 	// Fill the interior pixels
-	for(index x = 3; x < width; x += 2) {
-		for(index y = 3; y < height; y += 2) {
+	for(index x = 3; x < width - 3; x += 2) {
+		for(index y = 3; y < height - 3; y += 2) {
 			for(index channel = 0; channel < dst.channels(); ++channel) {
 				// Find the value with solve_interior
 				uint8_t value = solve_interior(dst, x, y, channel);
 				dst.set(x, y, value, channel);
-				// TODO: Bounds checking
 			}
 		}
 	}
