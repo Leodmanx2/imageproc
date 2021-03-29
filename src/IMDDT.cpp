@@ -10,8 +10,13 @@
 
 #include "IMDDT.hpp"
 
-#include "gsl-lite.hpp"
 #include <cstdint>
+#include <gsl\gsl-lite.hpp>
+
+#ifdef DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest\doctest.h>
+using doctest::Approx;
+#endif
 
 using namespace gsl;
 
@@ -85,3 +90,22 @@ Image IMDDT(const Image& src, const Dimensions& targetDim) {
 	}
 	return dst;
 }
+
+#ifdef DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+
+TEST_CASE("IMDDT_single returns expected results") {
+	SUBCASE("Pixel #2 excluded") {
+		CHECK(IMDDT_single(30, 0, 255, 60, 0.3, 0.7) == Approx(192));
+	}
+	SUBCASE("Pixel #3 excluded") {
+		CHECK(IMDDT_single(30, 0, 255, 60, 0.7, 0.3) == Approx(13.5));
+	}
+	SUBCASE("Pixel #4 excluded") {
+		CHECK(IMDDT_single(0, 30, 60, 255, 0.5, 0.3) == Approx(16.5));
+	}
+	SUBCASE("Pixel #1 excluded") {
+		CHECK(IMDDT_single(0, 30, 60, 255, 0.9, 0.3) == Approx(166.5));
+	}
+}
+
+#endif

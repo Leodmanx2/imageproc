@@ -1,9 +1,9 @@
 #ifndef IMAGE_H
 #define IMAGE_H
 
-#include "gsl-lite.hpp"
 #include <OpenImageIO/imageio.h>
 #include <cstdint>
+#include <gsl\gsl-lite.hpp>
 #include <iterator>
 #include <string>
 #include <vector>

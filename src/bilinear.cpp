@@ -1,6 +1,6 @@
 #include "bilinear.hpp"
-#include "gsl-lite.hpp"
 #include <cstdint>
+#include <gsl\gsl-lite.hpp>
 
 using namespace gsl;
 

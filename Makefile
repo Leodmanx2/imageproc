@@ -31,7 +31,7 @@ ASSDIR = $(CURDIR)/ass
 BINDIR = $(CURDIR)/bin
 
 OBJ = $(addprefix $(OBJDIR)/, Application.o Image.o bilinear.o IMDDT.o AIS_cubic.o)
-TEST_OBJ = $(addprefix $(OBJDIR)/, IMDDT_test.o TestRunner.o Image.o)
+TEST_OBJ = $(addprefix $(OBJDIR)/, AIS_cubic.o IMDDT.o TestRunner.o Image.o)
 
 CXXFLAGS_WARNINGS = -pedantic -Wall -Wextra -Wcast-align -Wcast-qual \
                     -Wctor-dtor-privacy -Wdisabled-optimization -Wformat=2 \
