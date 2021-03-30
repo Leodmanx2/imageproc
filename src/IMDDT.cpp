@@ -13,7 +13,7 @@
 #include <cstdint>
 #include <gsl\gsl-lite.hpp>
 
-#ifdef DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#ifdef TEST
 #include <doctest\doctest.h>
 using doctest::Approx;
 #endif
@@ -91,7 +91,7 @@ Image IMDDT(const Image& src, const Dimensions& targetDim) {
 	return dst;
 }
 
-#ifdef DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#ifdef TEST
 
 TEST_CASE("IMDDT_single returns expected results") {
 	SUBCASE("Pixel #2 excluded") {

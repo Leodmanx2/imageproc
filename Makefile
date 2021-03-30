@@ -94,7 +94,7 @@ clean:
 	@$(ECHO) Removing object and binary files
 	@rm -rf $(OBJDIR) $(BINDIR)/$(EXE_NAME) $(BINDIR)/$(TEST_EXE_NAME)
 
-.PHONY: test
+test: CXXFLAGS += -D TEST -g
 test: $(TEST_OBJ)
 	@$(ECHO) Linking $(TEST_EXE_NAME)
 	@$(CXX) $(LDFLAGS) -o $(BINDIR)/$(TEST_EXE_NAME) $(TEST_OBJ) $(TEST_LDLIBS)
