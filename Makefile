@@ -31,7 +31,6 @@ ASSDIR = $(CURDIR)/ass
 BINDIR = $(CURDIR)/bin
 
 OBJ = $(addprefix $(OBJDIR)/, Application.o Image.o bilinear.o IMDDT.o AIS_cubic.o)
-TEST_OBJ = $(addprefix $(OBJDIR)/, AIS_cubic.o IMDDT.o TestRunner.o Image.o)
 
 CXXFLAGS_WARNINGS = -pedantic -Wall -Wextra -Wcast-align -Wcast-qual \
                     -Wctor-dtor-privacy -Wdisabled-optimization -Wformat=2 \
@@ -50,13 +49,16 @@ CXXFLAGS += -std=c++17 $(CXXFLAGS_CLANG) $(CXXFLAGS_WARNINGS) -c -D gsl_CONFIG_C
 ifeq ($(OS), Windows_NT)
 	#LDFLAGS += -mwindows
 	EXE_NAME = $(PROJECT_NAME).exe
-	TEST_EXE_NAME = TestSuite.exe
 else
 	EXE_NAME = $(PROJECT_NAME)
-	TEST_EXE_NAME = TestSuite
 endif
 LDLIBS += -lopenimageio
 TEST_LDLIBS += -lopenimageio
+
+TESTS_ENABLED := $(or YES, 1)
+ifeq ($(TEST), TESTS_ENABLED)
+	CXXFLAGS += -D DOCTEST_CONFIG_DISABLE
+endif
 
 
 ################################################################################
@@ -65,12 +67,12 @@ TEST_LDLIBS += -lopenimageio
 
 all: CXXFLAGS += -O2 -march=native
 all: LDFLAGS += -s
-all: executable
+all: $(BINDIR)/$(EXE_NAME)
 
 debug: CXXFLAGS += -D DEBUG -g
-debug: executable
+debug: $(BINDIR)/$(EXE_NAME)
 
-executable: $(OBJ)
+$(BINDIR)/$(EXE_NAME): $(OBJ) | $(BINDIR)
 	@$(ECHO) Linking $(EXE_NAME)
 	@$(CXX) $(LDFLAGS) -o $(BINDIR)/$(EXE_NAME) $(OBJ) $(LDLIBS)
 
@@ -82,8 +84,11 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.cc
 	@$(ECHO) Compiling $<
 	@$(CXX) $(CXXFLAGS) -o $@ $<
 
+$(BINDIR):
+	@$(ECHO) Making binary directory
+	@mkdir $(BINDIR)
+
 $(OBJ): | $(OBJDIR)
-$(TEST_OBJ): | $(OBJDIR)
 
 $(OBJDIR):
 	@$(ECHO) Making object code directory
@@ -92,13 +97,12 @@ $(OBJDIR):
 .PHONY: clean
 clean:
 	@$(ECHO) Removing object and binary files
-	@rm -rf $(OBJDIR) $(BINDIR)/$(EXE_NAME) $(BINDIR)/$(TEST_EXE_NAME)
+	@rm -rf $(OBJDIR) $(BINDIR)/$(EXE_NAME)
 
-test: CXXFLAGS += -D TEST -g
-test: $(TEST_OBJ)
-	@$(ECHO) Linking $(TEST_EXE_NAME)
-	@$(CXX) $(LDFLAGS) -o $(BINDIR)/$(TEST_EXE_NAME) $(TEST_OBJ) $(TEST_LDLIBS)
-	$(BINDIR)/TestSuite.exe
+.PHONY: test
+test: TESTS_ENABLED = YES
+test: debug
+	$(BINDIR)/$(EXE_NAME) --exit
 
 
 # Progress indicator end

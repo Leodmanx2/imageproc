@@ -8,9 +8,7 @@
 #include "Image.hpp"
 #include <gsl\gsl-lite.hpp>
 
-#ifdef TEST
 #include <doctest\doctest.h>
-#endif
 
 using namespace gsl;
 
@@ -430,7 +428,6 @@ Image AIS_cubic(const Image& src) {
 
 // Unit Tests
 // ----------
-#ifdef TEST
 
 TEST_CASE("Gradients are computed correctly") {
 	Image src({7, 7}, 1);
@@ -447,5 +444,3 @@ TEST_CASE("Gradients are computed correctly") {
 	SUBCASE("U") { CHECK(U(src, 3, 3, 0) == 100); }
 	SUBCASE("D") { CHECK(D(src, 3, 3, 0) == 100); }
 }
-
-#endif

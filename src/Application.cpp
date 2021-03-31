@@ -11,11 +11,23 @@
 #include <sstream>
 #include <utility>
 
+#define DOCTEST_CONFIG_IMPLEMENT
+#include <doctest\doctest.h>
+
 int main(int argc, char* argv[]) {
 	try {
+		doctest::Context context;
+		context.applyCommandLine(argc, argv);
+		int result = context.run();
+		if(context.shouldExit()) { return result; }
+
 		Application app(argc, argv);
 		app.run();
-	} catch(const std::exception& e) { std::cerr << e.what() << std::endl; }
+		return result;
+	} catch(const std::exception& e) {
+		std::cerr << e.what() << std::endl;
+		return EXIT_FAILURE;
+	}
 }
 
 Application::Application(int argc, char** argv)
